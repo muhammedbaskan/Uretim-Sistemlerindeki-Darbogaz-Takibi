@@ -1,0 +1,121 @@
+﻿@{
+    ViewData["Title"] = "Sign Up";
+}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">Kayıt Ol</h2>
+                    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @ViewBag.ErrorMessage
+                        </div>
+                    }
+                    <form asp-action="SignUp" method="post">
+                        <div class="form-group">
+                            <label for="nameSurname">Ad Soyad:</label>
+                            <input type="text" class="form-control" id="nameSurname" name="nameSurname" onkeypress="preventDigits(event)" value="@ViewData["NameSurname"]">
+                        </div>
+                        <div class="form-group mt-3">
+                            <label for="signupUsername">Kullanıcı:</label>
+                            <input type="text" class="form-control" id="signupUsername" name="username" onkeypress="preventDigitsUserName(event)" value="@ViewData["Username"]">
+                        </div>
+                        <div class="form-group mt-3">
+                            <label for="signupPassword">Şifre:</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="signupPassword" name="password" placeholder="En az 6 karakter olmalı, 1 büyük, 1 küçük harf, 1 rakam içermelidir." value="@ViewData["Password"]">
+
+                                <span class="input-group-text" id="togglePassword" onclick="togglePassword()">
+                                    <i class="fa fa-eye-slash"></i>
+                                </span>
+
+                            </div>
+                        </div>
+                        <div class="form-group mt-3">
+                            <label for="passwordRepeat">Şifre Tekrarı:</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="passwordRepeat" placeholder="Şifre ile aynı olmalıdır" name="passwordRepeat" value="@ViewData["PasswordRepeat"]">
+
+                                <span class="input-group-text" id="togglePasswordRepeat" onclick="togglePasswordRepeat()">
+                                    <i class="fa fa-eye-slash"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success mt-3">Kayıt Ol</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    // Sayı girişini engelleyen JavaScript fonksiyonu
+    function preventDigits(event) {
+        // Basılan tuşun ASCII kodunu al
+        var charCode = (event.which) ? event.which : event.keyCode;
+        // ASCII kodu 48 (0) ile 57 (9) arasında ise (rakam ise)
+        if (charCode >= 48 && charCode <= 57) {
+            // Sayı girişini engelle
+            event.preventDefault();
+        }
+    }
+
+
+
+    function preventDigitsUserName(event) {
+        // Basılan tuşun ASCII kodunu al
+        var charCode = (event.which) ? event.which : event.keyCode;
+        // ASCII kodu 48 (0) ile 57 (9) arasında ise (rakam ise)
+        if (charCode == 32) {
+            // Sayı girişini engelle
+            event.preventDefault();
+        }
+    }
+
+    function togglePassword() {
+        var eyeIcon = document.getElementById('togglePassword');
+        var eyeClass = eyeIcon.firstElementChild.classList;
+
+        const password = document.querySelector('#signupPassword');
+
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+
+
+
+        if (eyeClass.contains('fa-eye')) {
+            eyeClass.remove('fa-eye');
+            eyeClass.add('fa-eye-slash');
+        } else if (eyeClass.contains('fa-eye-slash')) {
+            eyeClass.remove('fa-eye-slash');
+            eyeClass.add('fa-eye');
+        }
+    }
+
+    function togglePasswordRepeat() {
+        var eyeIcon = document.getElementById('togglePasswordRepeat');
+        var eyeClass = eyeIcon.firstElementChild.classList;
+
+        const password = document.querySelector('#passwordRepeat');
+
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+
+        if (eyeClass.contains('fa-eye')) {
+            eyeClass.remove('fa-eye');
+            eyeClass.add('fa-eye-slash');
+        } else if (eyeClass.contains('fa-eye-slash')) {
+            eyeClass.remove('fa-eye-slash');
+            eyeClass.add('fa-eye');
+        }
+    }
+
+
+</script>

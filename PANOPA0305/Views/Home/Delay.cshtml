@@ -1,0 +1,132 @@
+﻿@model List<PANOPA.Models.Delay>
+
+@{
+    ViewData["Title"] = "Delay List";
+}
+
+<h2 class="text-center">İşlem Listesi</h2>
+
+<table id="delayTable" class="table">
+    <thead>
+        <tr>
+            <th>Sıra</th>
+            <th>Proje Adı</th>
+            <th>Pano No</th>
+            <th>Ad Soyad</th>
+            <th>İşlem Adı</th>
+            <th>Kullanıcı Adı</th>
+            <th>Başlangıç Tarihi</th>
+            <th>Bitiş Tarihi</th>
+            <th>Süre</th>
+            <th>Gecikme Sebebi</th>
+            <th>Kaydet</th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (int i = 0; i < Model.Count; i++)
+        {
+            var delay = Model[i];
+            <tr>
+                <td>@(i + 1)</td>
+                <td><input type="text" class="project-name" value="@delay.ProjectName" /></td>
+                <td><input type="text" class="project-pano" value="@delay.PanoNo" /></td>
+                <td><input type="text" onkeypress="preventDigits(event)" class="project-adsoyad" value="@delay.NameSurname" /></td>
+
+                <td>@delay.ProcessName</td>
+                <td>@delay.UserName</td>
+                <td>@delay.StartDate</td>
+                <td>@delay.EndDate</td>
+                <td>@delay.DelayTime</td>
+                <td>@delay.PausedReason</td>
+                <td>
+                    <input type="hidden" name="DelayId" value="@delay.Id" />
+                    <button class="kaydet btn btn-success">Kaydet</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<style>
+    /* Checkbox hücrelerini ortala */
+    table.dataTable td, table.dataTable th {
+        text-align: center;
+    }
+</style>
+
+@section Scripts {
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#delayTable').DataTable({
+                "order": [],
+                "language": {
+                    "sEmptyTable": "Tabloda herhangi bir veri mevcut değil",
+                    "sInfo": "_TOTAL_ kayıttan _START_ - _END_ arası gösteriliyor",
+                    "sInfoEmpty": "Kayıt yok",
+                    "sInfoFiltered": "(_MAX_ kayıt içerisinden bulunan)",
+                    "sInfoPostFix": "",
+                    "sInfoThousands": ",",
+                    "sLengthMenu": "Sayfada _MENU_ kayıt göster",
+                    "sLoadingRecords": "Yükleniyor...",
+                    "sProcessing": "İşleniyor...",
+                    "sSearch": "Ara:",
+                    "sZeroRecords": "Eşleşen kayıt bulunamadı",
+                    "oPaginate": {
+                        "sFirst": "İlk",
+                        "sLast": "Son",
+                        "sNext": "Sonraki",
+                        "sPrevious": "Önceki"
+                    },
+                    "oAria": {
+                        "sSortAscending": ": artan sütun sıralamasını aktifleştir",
+                        "sSortDescending": ": azalan sütun sıralamasını aktifleştir"
+                    }
+                }
+            });
+
+            $('.kaydet').click(function () {
+                var projectName = $(this).closest('tr').find('.project-name').val();
+                var projectPano = $(this).closest('tr').find('.project-pano').val();
+                var projectAdsoyad = $(this).closest('tr').find('.project-adsoyad').val();
+
+                var delayId = $(this).closest('tr').find('[name="DelayId"]').val();
+
+                var delayInfo = {
+                    Id: delayId,
+                    projectName: projectName,
+                    PanoNo: projectPano,
+                    NameSurname: projectAdsoyad
+                };
+
+
+                // AJAX request to send data to server
+                $.ajax({
+                    type: 'POST',
+                    url: 'UpdateProject',
+                    data: JSON.stringify(delayInfo),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (response) {
+                        // Handle success response
+                    },
+                    error: function (xhr, status, error) {
+                        // Handle error
+                    }
+                });
+            });
+        });
+        function preventDigits(event) {
+    // Basılan tuşun ASCII kodunu al
+    var charCode = (event.which) ? event.which : event.keyCode;
+    // ASCII kodu 48 (0) ile 57 (9) arasında ise (rakam ise)
+    if (charCode >= 48 && charCode <= 57) {
+        // Sayı girişini engelle
+        event.preventDefault();
+    }
+}
+    </script>
+}
+

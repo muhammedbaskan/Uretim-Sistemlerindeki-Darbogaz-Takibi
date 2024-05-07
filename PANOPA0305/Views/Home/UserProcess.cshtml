@@ -1,0 +1,106 @@
+﻿@model List<PANOPA.Models.UserProcessModel>
+
+<h2 class="text-center">Kullanıcı Listesi</h2>
+
+<table id="example" class="display" style="width:100%">
+    <thead>
+        <tr>
+            <th>Kullanıcı Adı</th>
+@*             <th>Proje Adı</th>
+ *@            @foreach (var processName in new List<string> { "Kesim", "Büküm", "Kaynak", "Boya", "Montaj", "Kablaj" })
+            {
+                <th>@processName</th>
+            }
+            <th>Kaydet</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.UserName</td>
+            @foreach (var processName in new List<string> { "Kesim", "Büküm", "Kaynak", "Boya", "Montaj", "Kablaj" })
+                {
+                    <td><input type="checkbox" class="process" data-username="@item.UserName" data-process="@processName" @(item.ProcessName != null && item.ProcessName.Contains(processName) ? "checked" : "")></td>
+                }
+                <td><button class="kaydet btn btn-success">Kaydet</button></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+
+<style>
+    /* Checkbox hücrelerini ortala */
+    table.dataTable td, table.dataTable th {
+        text-align: center;
+    }
+</style>
+
+@section Scripts {
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#example').DataTable({
+                language: {
+                    "sEmptyTable": "Tabloda herhangi bir veri mevcut değil",
+                    "sInfo": "_TOTAL_ kayıttan _START_ - _END_ arası gösteriliyor",
+                    "sInfoEmpty": "Kayıt yok",
+                    "sInfoFiltered": "(_MAX_ kayıt içerisinden bulunan)",
+                    "sInfoPostFix": "",
+                    "sInfoThousands": ",",
+                    "sLengthMenu": "Sayfada _MENU_ kayıt göster",
+                    "sLoadingRecords": "Yükleniyor...",
+                    "sProcessing": "İşleniyor...",
+                    "sSearch": "Ara:",
+                    "sZeroRecords": "Eşleşen kayıt bulunamadı",
+                    "oPaginate": {
+                        "sFirst": "İlk",
+                        "sLast": "Son",
+                        "sNext": "Sonraki",
+                        "sPrevious": "Önceki"
+                    },
+                    "oAria": {
+                        "sSortAscending": ": artan sütun sıralamasını aktifleştir",
+                        "sSortDescending": ": azalan sütun sıralamasını aktifleştir"
+                    }
+                }
+            });
+
+            $('.kaydet').click(function () {
+                var userName = $(this).closest('tr').find('td:first-child').text();
+                //var projectName = $(this).closest('tr').find('.project-name').val();
+
+                var processes = [];
+
+                $(this).closest('tr').find('.process:checked').each(function () {
+                    processes.push($(this).data('process'));
+                });
+
+                var processInfo = {
+                    userName: userName,
+  //                  projectName: projectName,
+                    processName: processes
+                };
+
+                // AJAX request to send data to server
+                $.ajax({
+                    type: 'POST',
+                    url: 'UpdateProcess',
+                    data: JSON.stringify(processInfo),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (response) {
+                        // Handle success response
+                    },
+                    error: function (xhr, status, error) {
+                        // Handle error
+                    }
+                });
+            });
+        });
+    </script>
+}

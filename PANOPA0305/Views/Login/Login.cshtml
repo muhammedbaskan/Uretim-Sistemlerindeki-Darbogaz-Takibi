@@ -1,0 +1,73 @@
+﻿@{
+    ViewData["Title"] = "Login";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">Giriş Yap</h2>
+                    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @ViewBag.ErrorMessage
+                        </div>
+                    }
+                    <form asp-action="Login" method="post">
+                        <div class="form-group mt-3">
+                            <label for="username">Kullanıcı:</label>
+                            <input type="text" class="form-control" id="username" name="username" value="@ViewData["Username"]">
+                        </div>
+
+
+
+                        <div class="form-group mt-3">
+                            <label for="password">Şifre:</label>
+                            <div class="input-group">
+                            <input type="password" class="form-control" id="password" name="password" value="@ViewData["Password"]">
+                                <span class="input-group-text" id="togglePassword" onclick="togglePassword()">
+                                    <i class="fa fa-eye-slash"></i>
+                                </span>
+
+                            </div>
+                        </div>
+                        <div class="mt-3 row justify-content-between">
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-success">Giriş Yap</button>
+                            </div>
+                            <div class="col-auto">
+                                <a href="@Url.Action("SignUp", "Login")" class="btn btn-primary">Üye Ol</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function togglePassword() {
+        var eyeIcon = document.getElementById('togglePassword');
+        var eyeClass = eyeIcon.firstElementChild.classList;
+
+        const password = document.querySelector('#password');
+
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+
+
+
+        if (eyeClass.contains('fa-eye')) {
+            eyeClass.remove('fa-eye');
+            eyeClass.add('fa-eye-slash');
+        } else if (eyeClass.contains('fa-eye-slash')) {
+            eyeClass.remove('fa-eye-slash');
+            eyeClass.add('fa-eye');
+        }
+    }
+</script>

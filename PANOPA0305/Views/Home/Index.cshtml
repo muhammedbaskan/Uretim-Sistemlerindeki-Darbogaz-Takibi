@@ -1,0 +1,349 @@
+﻿@model List<PANOPA.Models.ProcessModel>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h2 class="text-center">Veri Toplama Sistemi</h2>
+
+@if (Model.Count == 0)
+{
+    <p>Henüz herhangi bir process bulunmamaktadır.</p>
+}
+else
+{
+    <div class="container">
+        <div class="row">
+            @foreach (var process in Model)
+            {
+                <div class="col-md-4 process-container mt-5">
+                    <div class="text-center">
+                        <input type="hidden" class="processId" value="@process.Id" />
+                        <h3>@process.Name</h3>
+                        <div class="d-flex justify-content-center align-items-start flex-row">
+                            <!-- First column for inputs -->
+                            <div class="mb-2 mr-2">
+                                <!-- Wrapper for input fields -->
+                                <input type="text" id="@($"custom-input-{process.Id}")" class="form-control custom-input inputs" placeholder="Proje Adı" style="width: 150px;" />
+                                <input type="text" id="@($"custom-pano-{process.Id}")" class="form-control custom-input-pano inputs mt-2" placeholder="Pano No" style="width: 150px;" />
+                                <input type="text" id="@($"custom-adsoyad-{process.Id}")" class="form-control custom-input-adsoyad inputs mt-2" onkeypress="preventDigits(event)" placeholder="Ad Soyad" style="width: 150px;" />
+                            </div>
+                            <!-- Second column for buttons -->
+                            <div class="d-flex flex-column justify-content-between ms-2">
+                                <!-- Wrapper for buttons -->
+                                <button class="btn btn-primary startButton mb-2" @(process.IsActive ? "" : "disabled")>Başla</button>
+                                <button class="btn btn-warning pauseButton mb-2" disabled>Duraklat</button>
+                                <button class="btn btn-danger endButton mb-2" disabled>Bitir</button>
+                            </div>
+                        </div>
+                        <p class="timeElapsing"></p>
+                        <p class="timeElapsed"></p>
+                        <p class="savedText" style="color: green;"></p>
+                    </div>
+                </div>
+
+
+
+
+
+
+
+
+
+            }
+        </div>
+    </div>
+}
+
+<!-- Modal -->
+<div class="modal fade" id="pauseModal" tabindex="-1" aria-labelledby="pauseModalLabel" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pauseModalLabel">Duraklatma Sebebi</h5>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control" id="pauseReason" placeholder="Duraklatma sebebini girin...">
+                <p id="pauseError" style="color: red; display: none;">Duraklama sebebi boş bırakılamaz!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelPauseReason">Vazgeç</button>
+                <button type="button" class="btn btn-primary" id="savePauseReason">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('#pauseModal').modal({
+        backdrop: 'static',
+        keyboard: false
+    });
+
+    var isPausedClicked = false;
+    var pausedReason = "";
+
+    $("#savePauseReason").click(function () {
+        var reason = $("#pauseReason").val();
+        if (!reason.trim()) {
+            $("#pauseError").show();
+        } else {
+            pausedReason += reason + " ; ";
+            $('#pauseModal').modal('hide');
+        }
+    });
+
+    $("#cancelPauseReason").click(function () {
+        $("#pauseReason").val("");
+        $("#pauseError").hide();
+    });
+</script>
+
+
+
+<script>
+   
+    var isPausedClicked = false;
+    var pausedReason = "";
+
+
+    $(".startButton").click(function () {
+
+        pausedReason = "";
+
+        var startButton = $(this);
+        var processContainer = startButton.closest(".process-container");
+        var processId = processContainer.find(".processId").val();
+        var processName = processContainer.find("h3").text();
+
+        var savedText = processContainer.find(".savedText");
+
+        var projectName = processContainer.find(".custom-input").val();
+
+        var panoNo = processContainer.find(".custom-input-pano").val();
+
+        var adSoyad = processContainer.find(".custom-input-adsoyad").val();
+
+        var errorText = "";
+
+        if (!projectName) {
+            errorText += "Proje Adı boş bırakılamaz. ";
+            savedText.text(errorText);
+            savedText.css("visibility", "visible");
+            savedText.css('color', 'red');
+        }
+
+        if (!panoNo) {
+            errorText += "Pano No boş bırakılamaz. ";
+
+            savedText.text(errorText);
+            savedText.css("visibility", "visible");
+            savedText.css('color', 'red');
+        }
+
+        if (!adSoyad) {
+            errorText += "Ad Soyad boş bırakılamaz. ";
+
+            savedText.text(errorText);
+            savedText.css("visibility", "visible");
+            savedText.css('color', 'red');
+        }
+        else {
+
+            $('#pauseModal').modal({
+                backdrop: 'static'
+            });
+            var currentDate = new Date();
+
+            // UTC+3 saat dilimine göre saat eklemesi yap
+            currentDate.setHours(currentDate.getHours() + 3);
+
+            // ISO 8601 formatında tarih ve saat değerini oluştur
+            var startDate = currentDate.toISOString();
+
+            var timeElapsing = processContainer.find(".timeElapsing");
+            var endButton = processContainer.find(".endButton");
+            var timeElapsed = processContainer.find(".timeElapsed");
+            var pauseButton = processContainer.find(".pauseButton");
+
+            var isPaused = false;
+
+
+            timeElapsing.css("visibility", "visible");
+
+            timeElapsing.text("0 saat 0 dakika 0 saniye");
+            savedText.css("visibility", "hidden");
+            timeElapsed.css("visibility", "hidden");
+
+
+            var startTime = new Date().getTime(); // Başlangıç zamanını saklayın
+            var elapsedTime = 0; // Geçen süreyi saklayın
+            var timer; // Zamanlayıcıyı saklayın
+
+            function updateTime() {
+                var currentTime = new Date().getTime();
+                elapsedTime = currentTime - startTime; // Geçen süreyi güncelleyin
+
+                var hours = Math.floor(elapsedTime / (1000 * 60 * 60));
+                var minutes = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((elapsedTime % (1000 * 60)) / 1000);
+
+                timeElapsing.text(hours + " saat " + minutes + " dakika " + seconds + " saniye");
+
+                endButton.prop("disabled", false);
+                startButton.prop("disabled", true);
+                pauseButton.prop("disabled", false);
+            };
+
+            function startTimer() {
+                timer = setInterval(function () {
+                    updateTime();
+                }, 1000);
+            }
+
+            startTimer();
+
+            pauseButton.click(function () {
+                if (!isPaused) {
+                    isPausedClicked = true;
+                    clearInterval(timer);
+                    isPaused = true;
+                    elapsedTime = new Date().getTime() - startTime; // Geçen süreyi kaydedin
+                    pauseButton.text("Devam Et");
+                } else {
+                    isPausedClicked = false;
+                    startTime = new Date().getTime() - elapsedTime; // Başlangıç zamanını güncelleyin
+                    startTimer();
+                    isPaused = false;
+                    pauseButton.text("Duraklat");
+                }
+            });
+
+            $("#cancelPauseReason").click(function () {
+                $("#pauseReason").val(""); // Metin kutusunu temizle
+                startTimer();
+                isPaused = false;
+                pauseButton.text("Duraklat");
+                isPausedClicked = false;
+                isPaused = false;
+                $("#pauseError").hide();
+            });
+
+
+
+
+            endButton.off('click').click(function () {
+                clearInterval(timer);
+
+                var currentDate2 = new Date();
+
+                // UTC+3 saat dilimine göre saat eklemesi yap
+                currentDate2.setHours(currentDate2.getHours() + 3);
+
+                // ISO 8601 formatında tarih ve saat değerini oluştur
+                var endDate = currentDate2.toISOString();
+
+
+                var timeElapsedText = timeElapsing.text();
+
+                if (pausedReason.length > 3) {
+                    pausedReason = pausedReason.substring(0, pausedReason.length - 3);
+                }
+                // İşlem bilgilerini objede topla
+                var processInfo = {
+                    processId: processId,
+                    processName: processName,
+                    projectName: projectName,
+                    panoNo: panoNo,
+                    nameSurname: adSoyad,
+                    startDate: startDate,
+                    endDate: endDate,
+                    delayTime: timeElapsedText,
+                    pausedReason: pausedReason
+                };
+
+                // AJAX isteği ile UrunController'daki Save metoduna gönder
+                $.ajax({
+                    type: "POST",
+                    url: "Save",
+                    data: JSON.stringify(processInfo),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (response) {
+                        // Başarılı bir şekilde kaydedildiğinde yapılacak işlemler
+                        console.log("İşlem başarıyla kaydedildi.");
+                        endButton.prop("disabled", true);
+                        pauseButton.prop("disabled", true);
+                        startButton.prop("disabled", false);
+                        timeElapsed.text(timeElapsing.text());
+                        savedText.text("Kaydedildi");
+
+                       
+                    },
+                    error: function (xhr, status, error) {
+                        // Hata durumunda yapılacak işlemler
+                        console.error("Hata oluştu:", error, xhr, status);
+                    }
+                });
+
+                // timeElapsing öğesini gizle
+                timeElapsing.css("visibility", "hidden");
+
+                timeElapsed.css("visibility", "visible");
+                savedText.css("visibility", "visible");
+                savedText.css('color', 'green');
+
+                $("#pauseReason").val(""); // Metin kutusunu temizle
+                isPaused = false;
+                pauseButton.text("Duraklat");
+                isPausedClicked = false;
+                isPaused = false;
+                $("#pauseError").hide();
+
+
+
+            });
+        }
+
+    });
+
+    var buttonHeight = document.querySelector(".startButton").offsetHeight;
+
+    // Set the height of each input field to match the button height
+    var inputFields = document.querySelectorAll(".inputs");
+    inputFields.forEach(function (input) {
+        input.style.height = buttonHeight + "px";
+    });
+
+    function preventDigits(event) {
+        // Basılan tuşun ASCII kodunu al
+        var charCode = (event.which) ? event.which : event.keyCode;
+        // ASCII kodu 48 (0) ile 57 (9) arasında ise (rakam ise)
+        if (charCode >= 48 && charCode <= 57) {
+            // Sayı girişini engelle
+            event.preventDefault();
+        }
+    }
+
+    // Duraklatma butonuna tıklanınca modalı aç
+    $(".pauseButton").click(function () {
+        if (!isPausedClicked) {
+            $('#pauseModal').modal('show');
+        }
+    });
+
+    // Vazgeç butonuna tıklanınca modalı kapat
+   
+    $("#savePauseReason").click(function () {
+        var reason = $("#pauseReason").val();
+        if (!reason.trim()) {
+            $("#pauseError").show();
+        } else {
+            pausedReason += reason + " ; ";
+            $('#pauseModal').modal('hide');
+            $("#pauseError").hide();
+            $("#pauseReason").val("");
+        }
+    });
+
+</script>
